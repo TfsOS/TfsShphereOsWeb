@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 300px;
+        }
+        .hidden {
+            display: none;
+        }
+        input, button, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+        }
+        textarea {
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginScreen">
+        <h2>Login</h2>
+        <input type="text" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div class="container hidden" id="mainScreen">
+        <h2>Compose Email</h2>
+        <input type="text" id="from" placeholder="From" readonly>
+        <input type="text" id="to" placeholder="To">
+        <input type="text" id="subject" placeholder="Subject">
+        <textarea id="body" placeholder="Body" rows="4"></textarea>
+        <button onclick="sendEmail()">Send</button>
+        <button onclick="logout()">Logout</button>
+        <h3>Inbox</h3>
+        <div id="inbox"></div>
+    </div>
+
+    <script>
+        const users = [
+            { email: 'user1@example.com', password: 'password1' },
+            { email: 'user2@example.com', password: 'password2' },
+            { email: 'user3@example.com', password: 'password3' }
+        ];
+
+        let currentUser = null;
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                currentUser = user.email;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainScreen').classList.remove('hidden');
+                document.getElementById('from').value = user.email;
+                loadInbox();
+            } else {
+                alert('Invalid email or password');
+            }
+        }
+
+        function sendEmail() {
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+            const subject = document.getElementById('subject').value;
+            const body = document.getElementById('body').value;
+
+            const email = { from, to, subject, body };
+            let inbox = JSON.parse(localStorage.getItem(to)) || [];
+            inbox.push(email);
+            localStorage.setItem(to, JSON.stringify(inbox));
+
+            alert('Email sent');
+            if (currentUser === to) {
+                loadInbox();
+            }
+        }
+
+        function loadInbox() {
+            const inbox = JSON.parse(localStorage.getItem(currentUser)) || [];
+            const inboxDiv = document.getElementById('inbox');
+            inboxDiv.innerHTML = '';
+
+            if (inbox.length === 0) {
+                inboxDiv.innerHTML = '<p>No new emails</p>';
+            } else {
+                inbox.forEach(email => {
+                    const emailDiv = document.createElement('div');
+                    emailDiv.innerHTML = `
+                        <p><strong>From:</strong> ${email.from}</p>
+                        <p><strong>Subject:</strong> ${email.subject}</p>
+                        <p>${email.body}</p>
+                        <hr>
+                    `;
+                    inboxDiv.appendChild(emailDiv);
+                });
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('mainScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+    </script>
+</body>
+</html>
